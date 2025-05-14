@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Private P2P Chat</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #f0f0f0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      background: rgba(0,0,0,0.3);
+      padding: 1rem;
+      text-align: center;
+      font-weight: bold;
+      font-size: 1.8rem;
+      user-select: none;
+      letter-spacing: 1px;
+    }
+    main {
+      flex: 1;
+      max-width: 720px;
+      margin: 1rem auto;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      background: rgba(0,0,0,0.2);
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+      padding: 1rem 1.5rem;
+    }
+    #connection {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    label {
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 0.2rem;
+      display: block;
+    }
+    input[type="text"] {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      flex: 1 1 200px;
+    }
+    button {
+      padding: 0.7rem 1rem;
+      font-weight: 700;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 12px #7c3aedaa;
+      background: #8b5cf6;
+      color: white;
+      transition: background-color 0.3s ease;
+      flex: 0 0 auto;
+    }
+    button:hover:not(:disabled) {
+      background: #7c3aed;
+      box-shadow: 0 6px 15px #6d28d9aa;
+    }
+    button:disabled {
+      background: #5a4fa9;
+      cursor: default;
+      box-shadow: none;
+    }
+    #your-id {
+      font-weight: 700;
+      font-size: 1.1rem;
+      user-select: all;
+      background: rgba(255,255,255,0.1);
+      padding: 0.3rem 0.7rem;
+      border-radius: 6px;
+      color: #e0e0ff;
+      margin-top: 0.3rem;
+    }
+    #status {
+      margin-top: 0.3rem;
+      font-size: 0.95rem;
+      font-style: italic;
+      color: #ddd;
+    }
+    #chat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: rgba(0,0,0,0.15);
+      border-radius: 12px;
+      padding: 1rem;
+      overflow: hidden;
+    }
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 0.5rem;
+      margin-bottom: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      color: #eee;
+    }
+    .message {
+      max-width: 70%;
+      padding: 0.6rem 1rem;
+      border-radius: 18px;
+      font-size: 1rem;
+      line-height: 1.3;
+      word-wrap: break-word;
+      user-select: text;
+      white-space: pre-wrap;
+      box-shadow: 0 0 6px rgba(0,0,0,0.2);
+      transition: background-color 0.3s;
+    }
+    .message.self {
+      background-color: #4ade80cc;
+      align-self: flex-end;
+      color: #111;
+      border-bottom-right-radius: 2px;
+    }
+    .message.other {
+      background-color: #a78bfacc;
+      align-self: flex-start;
+      border-bottom-left-radius: 2px;
+    }
+    #input-area {
+      display: flex;
+      gap: 0.8rem;
+    }
+    #message-input {
+      flex: 1;
+      padding: 0.7rem 1rem;
+      font-size: 1rem;
+      border-radius: 24px;
+      border: none;
+      outline: none;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      transition: background-color 0.3s ease;
+    }
+    #message-input:focus {
+      background: rgba(255,255,255,0.2);
+    }
+    #send-button {
+      background-color: #4ade80;
+      border: none;
+      color: #111;
+      font-weight: 700;
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px #22c55eaa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+    #send-button:hover:not(:disabled) {
+      background-color: #22c55e;
+      box-shadow: 0 6px 15px #16a34daa;
+    }
+    #send-button:disabled {
+      background-color: #a8e6a199;
+      cursor: default;
+      box-shadow: none;
+    }
+    footer {
+      text-align: center;
+      font-size: 0.85rem;
+      padding: 0.5rem;
+      opacity: 0.7;
+      user-select: none;
+    }
+    @media(max-width: 480px) {
+      #connection {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>Private Peer-to-Peer Chat</header>
+  <main>
+    <div id="connection">
+      <div style="flex:1; min-width: 180px;">
+        <label for="your-id-input">Your ID (choose anything):</label>
+        <input id="your-id-input" type="text" placeholder="e.g. alice123" autocomplete="off" />
+        <button id="create-peer-btn">Create Peer</button>
+        <div id="your-id" style="display:none;" title="Your peer ID to share with your friend"></div>
+      </div>
+      <div style="flex:1; min-width: 180px;">
+        <label for="connect-id-input">Connect to Peer ID:</label>
+        <input id="connect-id-input" type="text" placeholder="Friend's peer ID" autocomplete="off" disabled />
+        <button id="connect-btn" disabled>Connect</button>
+        <div id="status"></div>
+      </div>
+    </div>
+    <section id="chat" style="display:none; flex-direction: column; height: 55vh;">
+      <div id="messages" aria-live="polite" aria-atomic="false" role="log"></div>
+      <div id="input-area">
+        <input id="message-input" type="text" placeholder="Type your message..." autocomplete="off" disabled />
+        <button id="send-button" aria-label="Send message" disabled>&#9658;</button>
+      </div>
+    </section>
+  </main>
+  <footer>
+    &copy; Private P2P Chat — Hosted on GitHub Pages
+  </footer>
+
+  <!-- PeerJS CDN from jsDelivr -->
+  <script src="https://cdn.jsdelivr.net/npm/peerjs@1.4.7/dist/peerjs.min.js"></script>
+  <script>
+    (() => {
+      const createBtn = document.getElementById('create-peer-btn');
+      const yourIdInput = document.getElementById('your-id-input');
+      const yourIdDisplay = document.getElementById('your-id');
+      const connectIdInput = document.getElementById('connect-id-input');
+      const connectBtn = document.getElementById('connect-btn');
+      const statusDisplay = document.getElementById('status');
+      const chatSection = document.getElementById('chat');
+      const messagesDiv = document.getElementById('messages');
+      const messageInput = document.getElementById('message-input');
+      const sendButton = document.getElementById('send-button');
+
+      let peer = null;
+      let conn = null;
+
+      function logMessage(text, self) {
+        const msgDiv = document.createElement('div');
+        msgDiv.textContent = text;
+        msgDiv.className = 'message ' + (self ? 'self' : 'other');
+        messagesDiv.appendChild(msgDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+
+      function setStatus(text, isError = false) {
+        statusDisplay.textContent = text;
+        statusDisplay.style.color = isError ? '#f87171' : '#ddd';
+      }
+
+      function enableChatUI(enable) {
+        messageInput.disabled = !enable;
+        sendButton.disabled = !enable;
+        if (enable) {
+          messageInput.focus();
+        } else {
+          messageInput.value = '';
+        }
+      }
+
+      createBtn.addEventListener('click', () => {
+        const id = yourIdInput.value.trim();
+        if (!id) {
+          alert('Please enter your peer ID');
+          yourIdInput.focus();
+          return;
+        }
+        createBtn.disabled = true;
+        yourIdInput.disabled = true;
+
+        peer = new Peer(id, {
+          debug: 2
+        });
+
+        peer.on('open', (id) => {
+          yourIdDisplay.style.display = 'block';
+          yourIdDisplay.textContent = `Your ID: ${id}`;
+          setStatus('Waiting for connection...');
+          connectIdInput.disabled = false;
+          connectBtn.disabled = false;
+        });
+
+        peer.on('connection', (connection) => {
+          if (conn) {
+            connection.close(); // Only allow one connection
+            return;
+          }
+          conn = connection;
+          setStatus(`Connected to: ${conn.peer}`);
+          enableChatUI(true);
+          chatSection.style.display = 'flex';
+          connectBtn.disabled = true;
+          connectIdInput.disabled = true;
+
+          conn.on('data', (data) => {
+            logMessage(data, false);
+          });
+
+          conn.on('close', () => {
+            setStatus('Connection closed', true);
+            enableChatUI(false);
+            chatSection.style.display = 'none';
+            conn = null;
+            connectBtn.disabled = false;
+            connectIdInput.disabled = false;
+          });
+
+          conn.on('error', (err) => {
+            setStatus('Connection error: ' + err, true);
+          });
+        });
+
+        peer.on('error', (err) => {
+          setStatus('' + err, true);
+          createBtn.disabled = false;
+          yourIdInput.disabled = false;
+          connectIdInput.disabled = true;
+          connectBtn.disabled = true;
+        });
+      });
+
+      connectBtn.addEventListener('click', () => {
+        if (!peer || peer.disconnected) {
+          alert("Please create your peer first");
+          return;
+        }
+        const connectId = connectIdInput.value.trim();
+        if (!connectId) {
+          alert("Enter friend's peer ID to connect");
+          connectIdInput.focus();
+          return;
+        }
+        connectBtn.disabled = true;
+        connectIdInput.disabled = true;
+        setStatus('Connecting to ' + connectId + ' ...');
+        conn = peer.connect(connectId);
+
+        conn.on('open', () => {
+          setStatus('Connected to: ' + conn.peer);
+          enableChatUI(true);
+          chatSection.style.display = 'flex';
+        });
+
+        conn.on('data', (data) => {
+          logMessage(data, false);
+        });
+        conn.on('close', () => {
+          setStatus('Connection closed', true);
+          enableChatUI(false);
+          chatSection.style.display = 'none';
+          conn = null;
+          connectBtn.disabled = false;
+          connectIdInput.disabled = false;
+        });
+        conn.on('error', (err) => {
+          setStatus('Connection error: ' + err, true);
+        });
+      });
+
+      sendButton.addEventListener('click', () => {
+        sendMessage();
+      });
+      messageInput.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter' && !e.shiftKey){
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+
+      function sendMessage() {
+        const text = messageInput.value.trim();
+        if (!text) return;
+        if (!conn || !conn.open) {
+          alert("Not connected to a peer.");
+          return;
+        }
+        conn.send(text);
+        logMessage(text, true);
+        messageInput.value = '';
+        messageInput.focus();
+      }
+    })();
+  </script>
+</body>
+</html>
+
