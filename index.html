@@ -272,6 +272,9 @@
         yourIdInput.disabled = true;
 
         peer = new Peer(id, {
+          host: 'peerjs.com',
+          port: 443,
+          secure: true,
           debug: 2
         });
 
